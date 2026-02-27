@@ -8,7 +8,7 @@ const rooms = [
     capacity: 2,
     amenities: ['WiFi', 'TV', 'AC'],
     description: 'Cozy room perfect for single travelers or couples',
-    imageUrl: '/images/standard-room.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&auto=format&fit=crop',
   },
   {
     id: 2,
@@ -17,7 +17,7 @@ const rooms = [
     capacity: 3,
     amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Bathtub'],
     description: 'Spacious room with premium amenities for a comfortable stay',
-    imageUrl: '/images/deluxe-room.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800&auto=format&fit=crop',
   },
   {
     id: 3,
@@ -26,7 +26,7 @@ const rooms = [
     capacity: 4,
     amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Hot Tub', 'Living Area'],
     description: 'Luxury suite with separate living area and premium facilities',
-    imageUrl: '/images/suite-room.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop',
   },
   {
     id: 4,
@@ -35,7 +35,7 @@ const rooms = [
     capacity: 5,
     amenities: ['WiFi', 'TV', 'AC', 'Mini Fridge', 'Extra Beds'],
     description: 'Spacious room designed for families with multiple beds',
-    imageUrl: '/images/family-room.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&auto=format&fit=crop',
   },
   {
     id: 5,
@@ -44,7 +44,7 @@ const rooms = [
     capacity: 3,
     amenities: ['WiFi', 'TV', 'AC', 'Mini Bar', 'Jacuzzi', 'Work Desk', 'Balcony'],
     description: 'Premium executive suite with work area and stunning views',
-    imageUrl: '/images/executive-suite.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop',
   },
 ];
 
@@ -52,33 +52,20 @@ async function seedRooms() {
   try {
     const db = await getDatabase();
     const roomsCollection = db.collection('rooms');
-
-    // Check if rooms already exist
     const existingRooms = await roomsCollection.countDocuments();
-    
     if (existingRooms > 0) {
       console.log(`Found ${existingRooms} existing rooms. Clearing collection...`);
       await roomsCollection.deleteMany({});
     }
-
-    // Insert rooms
     const result = await roomsCollection.insertMany(
-      rooms.map(room => ({
-        ...room,
-        createdAt: new Date(),
-      }))
+      rooms.map(room => ({ ...room, createdAt: new Date() }))
     );
-
     console.log(`✅ Successfully seeded ${result.insertedCount} rooms!`);
-    console.log('Room IDs:', result.insertedIds);
-    
-    // Display the rooms
     const allRooms = await roomsCollection.find({}).toArray();
     console.log('\nSeeded Rooms:');
     allRooms.forEach(room => {
       console.log(`- ${room.name}: $${room.price}/night, Capacity: ${room.capacity}`);
     });
-
     process.exit(0);
   } catch (error) {
     console.error('❌ Error seeding rooms:', error);
