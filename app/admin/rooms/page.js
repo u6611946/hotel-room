@@ -4,10 +4,8 @@ export const dynamic = "force-dynamic";
 
 import Navbar from "@/components/layout/navbar";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 export default function RoomsManagement() {
-  const searchParams = useSearchParams();
 
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,15 +21,19 @@ export default function RoomsManagement() {
     imageUrl: "",
   });
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
   useEffect(() => {
     fetchRooms();
 
-    if (searchParams.get("action") === "add") {
-      setShowModal(true);
+    // Handle ?action=add without useSearchParams
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "add") {
+        setShowModal(true);
+      }
     }
-  }, [searchParams]);
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+  }, []);
 
   const fetchRooms = async () => {
     try {
