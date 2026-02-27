@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import LoginModal from '@/components/auth/LoginModal';
 import RegisterModal from '@/components/auth/RegisterModal';
 import ProfileModal from '@/components/auth/ProfileModal';
 
-export default function Navbar() {
+function NavbarContent() {
     const pathname = usePathname();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
@@ -16,19 +16,17 @@ export default function Navbar() {
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     useEffect(() => {
-        // Check login status
         const loggedIn = localStorage.getItem('isLoggedIn');
         const userData = localStorage.getItem('user');
-        
+
         setIsLoggedIn(!!loggedIn);
+
         if (userData) {
             setUser(JSON.parse(userData));
         }
     }, [pathname]);
 
-    const isActive = (path) => {
-        return pathname === path;
-    };
+    const isActive = (path) => pathname === path;
 
     const handleSwitchToRegister = () => {
         setShowLoginModal(false);
@@ -49,37 +47,35 @@ export default function Navbar() {
                             🏨 Luxury Hotel
                         </h1>
                     </Link>
-                    
+
                     <div className="flex items-center space-x-1">
                         <Link
                             href="/"
                             className={`px-4 py-2 rounded-lg transition ${
-                                isActive('/') 
-                                    ? 'bg-red-700 text-yellow-400' 
+                                isActive('/')
+                                    ? 'bg-red-700 text-yellow-400'
                                     : 'text-gray-300 hover:bg-red-900 hover:text-yellow-400'
                             }`}
                         >
                             Home
                         </Link>
+
                         <Link
                             href="/booking"
                             className={`px-4 py-2 rounded-lg transition ${
-                                isActive('/booking') 
-                                    ? 'bg-red-700 text-yellow-400' 
+                                isActive('/booking')
+                                    ? 'bg-red-700 text-yellow-400'
                                     : 'text-gray-300 hover:bg-red-900 hover:text-yellow-400'
                             }`}
                         >
                             Book Now
                         </Link>
-                        
+
                         {isLoggedIn ? (
                             <button
                                 onClick={() => setShowProfileModal(true)}
                                 className="px-4 py-2 rounded-lg transition flex items-center gap-2 text-gray-300 hover:bg-red-900 hover:text-yellow-400"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
                                 {user?.firstName || 'Profile'}
                             </button>
                         ) : (
@@ -90,6 +86,7 @@ export default function Navbar() {
                                 >
                                     Login
                                 </button>
+
                                 <button
                                     onClick={() => setShowRegisterModal(true)}
                                     className="px-4 py-2 rounded-lg transition border-2 text-yellow-400 border-yellow-400 hover:bg-red-900"
@@ -102,21 +99,30 @@ export default function Navbar() {
                 </div>
             </div>
 
-            {/* Modals */}
-            <LoginModal 
-                isOpen={showLoginModal} 
+            <LoginModal
+                isOpen={showLoginModal}
                 onClose={() => setShowLoginModal(false)}
                 onSwitchToRegister={handleSwitchToRegister}
             />
-            <RegisterModal 
-                isOpen={showRegisterModal} 
+
+            <RegisterModal
+                isOpen={showRegisterModal}
                 onClose={() => setShowRegisterModal(false)}
                 onSwitchToLogin={handleSwitchToLogin}
             />
-            <ProfileModal 
-                isOpen={showProfileModal} 
+
+            <ProfileModal
+                isOpen={showProfileModal}
                 onClose={() => setShowProfileModal(false)}
             />
         </nav>
+    );
+}
+
+export default function Navbar() {
+    return (
+        <Suspense fallback={null}>
+            <NavbarContent />
+        </Suspense>
     );
 }
