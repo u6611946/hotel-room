@@ -46,6 +46,15 @@ const rooms = [
     description: 'Premium executive suite with work area and stunning views',
     imageUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&auto=format&fit=crop',
   },
+  {
+    id: 6,
+    name: 'Superior',
+    price: 199,
+    capacity: 3,
+    amenities: ['WiFi', 'TV', 'AC', 'Mini Fridge'],
+    description: 'Suitable for small family',
+    imageUrl: 'https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800&auto=format&fit=crop',
+  },
 ];
 
 async function seedRooms() {
