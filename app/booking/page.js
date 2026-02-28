@@ -114,7 +114,7 @@ function BookingForm() {
         roomName: selectedRoom.name,
         bookingDate: new Date().toISOString(),
       };
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bookings`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingData),
