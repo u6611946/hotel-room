@@ -25,8 +25,6 @@ export default function RoomsManagement() {
 
   useEffect(() => {
     fetchRooms();
-
-    // Handle ?action=add without useSearchParams
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("action") === "add") {
@@ -52,11 +50,11 @@ export default function RoomsManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
+      // ✅ Use room.id (number) not room._id (ObjectId)
       const method = editingRoom ? "PUT" : "POST";
       const url = editingRoom
-        ? `${API_URL}/rooms/${editingRoom._id}`
+        ? `${API_URL}/rooms/${editingRoom.id}`
         : `${API_URL}/rooms`;
 
       const response = await fetch(url, {
@@ -71,27 +69,35 @@ export default function RoomsManagement() {
       });
 
       if (response.ok) {
+        alert(editingRoom ? "Room updated successfully!" : "Room created successfully!");
         fetchRooms();
         resetForm();
+      } else {
+        alert("Failed to save room. Please try again.");
       }
     } catch (error) {
       console.error("Error saving room:", error);
+      alert("An error occurred.");
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this room?")) return;
-
+  const handleDelete = async (room) => {
+    if (!confirm(`Are you sure you want to delete "${room.name}"?`)) return;
     try {
-      const response = await fetch(`${API_URL}/rooms/${id}`, {
+      // ✅ Use room.id (number) not room._id (ObjectId)
+      const response = await fetch(`${API_URL}/rooms/${room.id}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
+        alert("Room deleted successfully!");
         fetchRooms();
+      } else {
+        alert("Failed to delete room.");
       }
     } catch (error) {
       console.error("Error deleting room:", error);
+      alert("An error occurred.");
     }
   };
 
@@ -124,7 +130,6 @@ export default function RoomsManagement() {
   return (
     <>
       <Navbar />
-
       <div className="container mx-auto p-6">
         <div className="flex justify-between mb-6">
           <h1 className="text-2xl font-bold">Rooms Management</h1>
@@ -150,7 +155,6 @@ export default function RoomsManagement() {
                   <p>Price: ${room.price}</p>
                   <p>Capacity: {room.capacity}</p>
                 </div>
-
                 <div className="space-x-2">
                   <button
                     onClick={() => handleEdit(room)}
@@ -159,7 +163,7 @@ export default function RoomsManagement() {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(room._id)}
+                    onClick={() => handleDelete(room)}
                     className="bg-red-500 text-white px-3 py-1 rounded"
                   >
                     Delete
@@ -176,83 +180,28 @@ export default function RoomsManagement() {
               <h2 className="text-xl font-bold mb-4">
                 {editingRoom ? "Edit Room" : "Add Room"}
               </h2>
-
               <form onSubmit={handleSubmit} className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Room Name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                  required
-                />
-
-                <input
-                  type="number"
-                  placeholder="Price"
-                  value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                  required
-                />
-
-                <input
-                  type="number"
-                  placeholder="Capacity"
-                  value={formData.capacity}
-                  onChange={(e) =>
-                    setFormData({ ...formData, capacity: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                  required
-                />
-
-                <input
-                  type="text"
-                  placeholder="Amenities (comma separated)"
-                  value={formData.amenities}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amenities: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                />
-
-                <textarea
-                  placeholder="Description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Image URL"
-                  value={formData.imageUrl}
-                  onChange={(e) =>
-                    setFormData({ ...formData, imageUrl: e.target.value })
-                  }
-                  className="w-full border p-2 rounded"
-                />
-
+                <input type="text" placeholder="Room Name" value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full border p-2 rounded" required />
+                <input type="number" placeholder="Price" value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  className="w-full border p-2 rounded" required />
+                <input type="number" placeholder="Capacity" value={formData.capacity}
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+                  className="w-full border p-2 rounded" required />
+                <input type="text" placeholder="Amenities (comma separated)" value={formData.amenities}
+                  onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
+                  className="w-full border p-2 rounded" />
+                <textarea placeholder="Description" value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full border p-2 rounded" />
+                <input type="text" placeholder="Image URL" value={formData.imageUrl}
+                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                  className="w-full border p-2 rounded" />
                 <div className="flex justify-end space-x-2">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="px-4 py-2 border rounded"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="bg-blue-500 text-white px-4 py-2 rounded"
-                  >
+                  <button type="button" onClick={resetForm} className="px-4 py-2 border rounded">Cancel</button>
+                  <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
                     {editingRoom ? "Update" : "Create"}
                   </button>
                 </div>
