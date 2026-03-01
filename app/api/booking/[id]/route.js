@@ -10,9 +10,30 @@ function toObjectId(id) {
   }
 }
 
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params;  // ✅ await params
+    const db = await getDatabase();
+    const bookingsCollection = db.collection('bookings');
+
+    const objectId = toObjectId(id);
+    const query = objectId ? { _id: objectId } : { id: id };
+    const booking = await bookingsCollection.findOne(query);
+
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ ...booking, _id: booking._id.toString() }, { status: 200 });
+  } catch (error) {
+    console.error('GET booking error:', error);
+    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
+  }
+}
+
 export async function PATCH(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;  // ✅ await params
     const body = await request.json();
     const db = await getDatabase();
     const bookingsCollection = db.collection('bookings');
@@ -25,10 +46,8 @@ export async function PATCH(request, { params }) {
     if (body.phone) updateData.phone = body.phone;
     updateData.updatedAt = new Date();
 
-    // Try ObjectId first, fall back to string id
     const objectId = toObjectId(id);
     const query = objectId ? { _id: objectId } : { id: id };
-
     const result = await bookingsCollection.updateOne(query, { $set: updateData });
 
     if (result.matchedCount === 0) {
@@ -44,13 +63,12 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;  // ✅ await params
     const db = await getDatabase();
     const bookingsCollection = db.collection('bookings');
 
     const objectId = toObjectId(id);
     const query = objectId ? { _id: objectId } : { id: id };
-
     const result = await bookingsCollection.deleteOne(query);
 
     if (result.deletedCount === 0) {
@@ -61,27 +79,5 @@ export async function DELETE(request, { params }) {
   } catch (error) {
     console.error('DELETE booking error:', error);
     return NextResponse.json({ error: 'Failed to delete booking' }, { status: 500 });
-  }
-}
-
-export async function GET(request, { params }) {
-  try {
-    const { id } = params;
-    const db = await getDatabase();
-    const bookingsCollection = db.collection('bookings');
-
-    const objectId = toObjectId(id);
-    const query = objectId ? { _id: objectId } : { id: id };
-
-    const booking = await bookingsCollection.findOne(query);
-
-    if (!booking) {
-      return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(booking, { status: 200 });
-  } catch (error) {
-    console.error('GET booking error:', error);
-    return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
   }
 }

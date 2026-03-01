@@ -4,7 +4,6 @@ import Navbar from "@/components/layout/navbar";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-// ✅ Inner component that uses useSearchParams
 function BookingForm() {
   const searchParams = useSearchParams();
   const [availableRooms, setAvailableRooms] = useState([]);
@@ -23,7 +22,6 @@ function BookingForm() {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Auto-fill guest info if user is logged in
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -42,7 +40,6 @@ function BookingForm() {
     }
   }, []);
 
-  // Fetch available rooms on component mount
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -55,8 +52,6 @@ function BookingForm() {
         if (response.ok) {
           const data = await response.json();
           setAvailableRooms(data);
-        } else {
-          console.error('Failed to fetch rooms');
         }
       } catch (error) {
         console.error('Error fetching rooms:', error);
@@ -70,9 +65,7 @@ function BookingForm() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
@@ -107,23 +100,32 @@ function BookingForm() {
     if (!validateForm()) return;
     try {
       const bookingData = {
-        ...formData,
         roomId: parseInt(formData.roomId),
-        nights: calculateNights(),
-        totalPrice: calculateTotal(),
         roomName: selectedRoom.name,
-        bookingDate: new Date().toISOString(),
+        checkIn: formData.checkIn,
+        checkOut: formData.checkOut,
+        guests: Number(formData.guests),
+        nights: calculateNights(),
+        pricePerNight: selectedRoom.price,   // ✅ added
+        totalPrice: calculateTotal(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
       };
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingData),
       });
+
       if (response.ok) {
         setBookingConfirmed(true);
         setTimeout(() => { window.location.href = '/'; }, 3000);
       } else {
-        alert('Booking failed. Please try again.');
+        const errData = await response.json();
+        alert(`Booking failed: ${errData.error || 'Please try again.'}`);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -138,7 +140,7 @@ function BookingForm() {
           <div className="text-5xl mb-4">✅</div>
           <h1 className="text-3xl font-bold text-green-700 mb-2">Booking Confirmed!</h1>
           <p className="text-gray-600 mb-4">
-            Your booking has been successfully completed. A confirmation email has been sent to {formData.email}.
+            Your booking has been successfully completed. A confirmation will be sent to {formData.email}.
           </p>
           <p className="text-sm text-gray-500">Redirecting to home page...</p>
         </div>
@@ -151,10 +153,8 @@ function BookingForm() {
       <h1 className="text-4xl font-bold mb-2 text-center text-red-900">Book Your Room</h1>
       <div className="w-24 h-1 bg-gradient-to-r from-red-700 to-yellow-500 mx-auto mb-8"></div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Booking Form */}
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-            {/* Guest Information */}
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">Guest Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -185,7 +185,6 @@ function BookingForm() {
               </div>
             </div>
 
-            {/* Booking Details */}
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">Booking Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -214,7 +213,6 @@ function BookingForm() {
               </div>
             </div>
 
-            {/* Room Selection */}
             <div>
               <h2 className="text-2xl font-semibold mb-4 text-gray-900">Select Room *</h2>
               {errors.roomId && <p className="text-red-500 text-sm mb-3">{errors.roomId}</p>}
@@ -224,14 +222,17 @@ function BookingForm() {
                 </div>
               ) : availableRooms.length === 0 ? (
                 <div className="text-center py-8 bg-gray-50 rounded-lg">
-                  <p className="text-gray-600">No rooms available for the selected dates and guest count.</p>
-                  <p className="text-sm text-gray-500 mt-2">Try adjusting your search criteria.</p>
+                  <p className="text-gray-600">No rooms available for the selected dates.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {availableRooms.map(room => (
-                    <label key={room.id} className="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-red-50 transition"
-                      style={{ borderColor: formData.roomId === String(room.id) ? '#b91c1c' : '#d1d5db', backgroundColor: formData.roomId === String(room.id) ? '#fef2f2' : 'white' }}>
+                    <label key={room.id}
+                      className="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-red-50 transition"
+                      style={{
+                        borderColor: formData.roomId === String(room.id) ? '#b91c1c' : '#d1d5db',
+                        backgroundColor: formData.roomId === String(room.id) ? '#fef2f2' : 'white'
+                      }}>
                       <input type="radio" name="roomId" value={room.id}
                         checked={formData.roomId === String(room.id)}
                         onChange={(e) => { handleInputChange(e); setSelectedRoom(room); }}
@@ -239,7 +240,7 @@ function BookingForm() {
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg text-gray-900">{room.name}</h3>
                         <p className="text-gray-600 text-sm">Capacity: {room.capacity} guests</p>
-                        <p className="text-sm text-gray-500">Amenities: {room.amenities.join(', ')}</p>
+                        <p className="text-sm text-gray-500">Amenities: {room.amenities?.join(', ')}</p>
                         {room.description && <p className="text-sm text-gray-600 mt-1">{room.description}</p>}
                       </div>
                       <div className="text-right ml-4">
@@ -252,13 +253,13 @@ function BookingForm() {
               )}
             </div>
 
-            <button type="submit" className="w-full bg-red-700 hover:bg-red-800 text-yellow-400 font-bold py-3 px-4 rounded-lg transition">
+            <button type="submit"
+              className="w-full bg-red-700 hover:bg-red-800 text-yellow-400 font-bold py-3 px-4 rounded-lg transition">
               Confirm Booking
             </button>
           </form>
         </div>
 
-        {/* Booking Summary */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
             <h2 className="text-2xl font-semibold mb-4 text-gray-900">Booking Summary</h2>
@@ -266,15 +267,15 @@ function BookingForm() {
               <div className="space-y-4">
                 <div className="relative h-40 bg-gray-200 rounded-lg overflow-hidden mb-4">
                   {selectedRoom.imageUrl ? (
-                    <img src={selectedRoom.imageUrl} alt={selectedRoom.name} className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-                  ) : null}
-                  <div className="absolute inset-0 bg-gradient-to-br from-red-900 to-black flex items-center justify-center text-yellow-400"
-                    style={{ display: selectedRoom.imageUrl ? 'none' : 'flex' }}>
-                    <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                  </div>
+                    <img src={selectedRoom.imageUrl} alt={selectedRoom.name}
+                      className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-900 to-black flex items-center justify-center text-yellow-400">
+                      <svg className="w-16 h-16 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
                 <div className="border-b pb-3">
                   <p className="text-gray-600">Room Type</p>
@@ -311,7 +312,6 @@ function BookingForm() {
   );
 }
 
-// ✅ Outer component wraps BookingForm in Suspense
 export default function BookingPage() {
   return (
     <div className="min-h-screen bg-gray-50">

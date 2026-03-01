@@ -35,7 +35,8 @@ export default function ProfileModal({ isOpen, onClose }) {
 
     const fetchUserBookings = async (email) => {
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking?email=${email}`);
+            setLoading(true);
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking?email=${encodeURIComponent(email)}`);
             if (response.ok) {
                 const data = await response.json();
                 setBookings(data);
@@ -49,27 +50,17 @@ export default function ProfileModal({ isOpen, onClose }) {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
-        
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/update`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    oldEmail: user.email,
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...formData, oldEmail: user.email }),
             });
-
             if (response.ok) {
                 const updatedUser = await response.json();
                 localStorage.setItem('user', JSON.stringify(updatedUser.user));
@@ -94,19 +85,13 @@ export default function ProfileModal({ isOpen, onClose }) {
     };
 
     const handleCancelBooking = async (bookingId) => {
-        if (!confirm('Are you sure you want to cancel this booking?')) {
-            return;
-        }
-
+        if (!confirm('Are you sure you want to cancel this booking?')) return;
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/booking/${bookingId}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ status: 'cancelled' }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Cancelled' }),
             });
-
             if (response.ok) {
                 alert('Booking cancelled successfully');
                 fetchUserBookings(user.email);
@@ -117,6 +102,13 @@ export default function ProfileModal({ isOpen, onClose }) {
             console.error('Error cancelling booking:', error);
             alert('An error occurred');
         }
+    };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
     };
 
     if (!isOpen) return null;
@@ -130,16 +122,11 @@ export default function ProfileModal({ isOpen, onClose }) {
                         <p className="text-gray-600 text-sm mt-1">Manage your account and bookings</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={handleLogout}
-                            className="bg-red-700 hover:bg-red-800 text-yellow-400 font-semibold py-2 px-4 rounded-lg transition text-sm"
-                        >
+                        <button onClick={handleLogout}
+                            className="bg-red-700 hover:bg-red-800 text-yellow-400 font-semibold py-2 px-4 rounded-lg transition text-sm">
                             Logout
                         </button>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600"
-                        >
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -155,10 +142,8 @@ export default function ProfileModal({ isOpen, onClose }) {
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-bold text-gray-900">Profile Information</h3>
                                     {!isEditing && (
-                                        <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="text-red-700 hover:text-red-800 text-sm font-semibold"
-                                        >
+                                        <button onClick={() => setIsEditing(true)}
+                                            className="text-red-700 hover:text-red-800 text-sm font-semibold">
                                             Edit
                                         </button>
                                     )}
@@ -167,77 +152,36 @@ export default function ProfileModal({ isOpen, onClose }) {
                                 {isEditing ? (
                                     <form onSubmit={handleUpdateProfile} className="space-y-3">
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                First Name
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="firstName"
-                                                value={formData.firstName}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                                                required
-                                            />
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
+                                            <input type="text" name="firstName" value={formData.firstName} onChange={handleChange}
+                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" required />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                Last Name
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="lastName"
-                                                value={formData.lastName}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                                                required
-                                            />
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
+                                            <input type="text" name="lastName" value={formData.lastName} onChange={handleChange}
+                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" required />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                Email
-                                            </label>
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                                                required
-                                            />
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                                            <input type="email" name="email" value={formData.email} onChange={handleChange}
+                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" required />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                Phone
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleChange}
-                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                                                required
-                                            />
+                                            <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                                            <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
+                                                className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600" required />
                                         </div>
                                         <div className="flex gap-2 pt-2">
-                                            <button
-                                                type="submit"
-                                                className="flex-1 bg-red-700 hover:bg-red-800 text-yellow-400 font-semibold py-2 rounded-lg transition text-sm"
-                                            >
+                                            <button type="submit"
+                                                className="flex-1 bg-red-700 hover:bg-red-800 text-yellow-400 font-semibold py-2 rounded-lg transition text-sm">
                                                 Save
                                             </button>
-                                            <button
-                                                type="button"
+                                            <button type="button"
                                                 onClick={() => {
                                                     setIsEditing(false);
-                                                    setFormData({
-                                                        firstName: user.firstName,
-                                                        lastName: user.lastName,
-                                                        email: user.email,
-                                                        phone: user.phone,
-                                                    });
+                                                    setFormData({ firstName: user.firstName, lastName: user.lastName, email: user.email, phone: user.phone });
                                                 }}
-                                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg transition text-sm"
-                                            >
+                                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-lg transition text-sm">
                                                 Cancel
                                             </button>
                                         </div>
@@ -264,7 +208,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                         {/* Bookings */}
                         <div className="lg:col-span-2">
                             <h3 className="text-lg font-bold mb-4 text-gray-900">My Bookings</h3>
-                            
+
                             {loading ? (
                                 <div className="text-center py-8 text-gray-500">
                                     <p>Loading bookings...</p>
@@ -272,43 +216,41 @@ export default function ProfileModal({ isOpen, onClose }) {
                             ) : bookings.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
                                     <p>No bookings yet</p>
-                                    <button
-                                        onClick={() => {
-                                            onClose();
-                                            router.push('/booking');
-                                        }}
-                                        className="text-red-700 hover:text-red-800 font-semibold mt-2 inline-block"
-                                    >
+                                    <button onClick={() => { onClose(); router.push('/booking'); }}
+                                        className="text-red-700 hover:text-red-800 font-semibold mt-2 inline-block">
                                         Book a room
                                     </button>
                                 </div>
                             ) : (
                                 <div className="space-y-3 max-h-96 overflow-y-auto">
                                     {bookings.map((booking) => (
-                                        <div key={booking.id} className="border rounded-lg p-4 hover:shadow-md transition bg-white">
+                                        // ✅ Use _id (MongoDB ObjectId string) as key
+                                        <div key={booking._id} className="border rounded-lg p-4 hover:shadow-md transition bg-white">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <h4 className="text-base font-semibold text-gray-900">{booking.roomName}</h4>
                                                     <div className="mt-2 space-y-1 text-sm text-gray-600">
-                                                        <p>Check-in: {booking.checkIn}</p>
-                                                        <p>Check-out: {booking.checkOut}</p>
-                                                        <p>Guests: {booking.guests} | Nights: {booking.nights}</p>
+                                                        <p>Check-in: <span className="font-medium text-gray-800">{formatDate(booking.checkIn)}</span></p>
+                                                        <p>Check-out: <span className="font-medium text-gray-800">{formatDate(booking.checkOut)}</span></p>
+                                                        <p>Guests: <span className="font-medium text-gray-800">{booking.guests}</span> | Nights: <span className="font-medium text-gray-800">{booking.nights}</span></p>
                                                         <p className="font-semibold text-red-700">Total: ${booking.totalPrice}</p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right ml-4">
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                                        booking.status === 'confirmed' 
-                                                            ? 'bg-green-100 text-green-800' 
-                                                            : 'bg-red-100 text-red-800'
+                                                        booking.status?.toLowerCase() === 'confirmed'
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : booking.status?.toLowerCase() === 'cancelled'
+                                                            ? 'bg-red-100 text-red-800'
+                                                            : 'bg-yellow-100 text-yellow-800'
                                                     }`}>
-                                                        {booking.status}
+                                                        {booking.status || 'pending'}
                                                     </span>
-                                                    {booking.status === 'confirmed' && (
+                                                    {/* ✅ Only show cancel for pending bookings, use _id */}
+                                                    {booking.status?.toLowerCase() !== 'cancelled' && (
                                                         <button
-                                                            onClick={() => handleCancelBooking(booking.id)}
-                                                            className="mt-2 text-red-600 hover:text-red-800 text-xs font-semibold block"
-                                                        >
+                                                            onClick={() => handleCancelBooking(booking._id)}
+                                                            className="mt-2 text-red-600 hover:text-red-800 text-xs font-semibold block">
                                                             Cancel
                                                         </button>
                                                     )}
